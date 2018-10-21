@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
+
+# Original author of random wiki post we did use as base layout
 __author__ = "bythew3i"
 
 import evdev
 
 from ev3dev2.motor import MoveJoystick, LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D
+
+
+# Finds the gamepad from Bluetooth device list
 
 def find_controller():
     # ps4 controller set up
@@ -14,11 +19,15 @@ def find_controller():
     gamepad = evdev.InputDevice(ps4dev)
     return gamepad
 
+
+# Initializes our joystick move for vectorial movement of gamepad analog stick
+
 def create_steering_tank():
     jmove = MoveJoystick(OUTPUT_A, OUTPUT_B)
-    # jmove.set_polarity(LargeMotor.POLARITY_INVERSED)
     return jmove
 
+
+# Scales the analog stick for the controlling module range
 
 def scale(val, src, dst):
     return (float(val - src[0]) / (src[1] - src[0])) * (dst[1] - dst[0]) + dst[0]
@@ -33,40 +42,32 @@ y = 0
 print("onks padia")
 gamepad = find_controller()
 bot = create_steering_tank()
-koura = MediumMotor(OUTPUT_D)
-speed = 30
+koura = MediumMotor(OUTPUT_D) # our hand to grab 'em all
 
 for event in gamepad.read_loop():   #this loops infinitely
-    if event.type == 3:             #Some stick is moved
-        if event.code == 1:         #Y axis on right stick
-            perkele = scale_stick(event.value)
-            wheel_speed = perkele
-            y = perkele
+
+    # Read the analog stick values and move the robot
+    if event.type == 3:
+        if event.code == 1:
+            y = scale_stick(event.value)
         if event.code == 0:
-            perkele2 = scale_stick(event.value)/3.0
-            steer_speed = perkele2
-            x = perkele2
+            x = scale_stick(event.value)/3.0
+
         try:
             bot.on(x, y, 100, 1)
-        except TypeError:
+        except TypeError: # thanks to library bug a quick fix
             bot.off()
 
+    # Listen to the trigger to start moving the hand
     if event.type == 1 and event.value == 1:
         if event.code == 312:
-            print("kiinni")
             koura.on(-5)
-            print("kiinnien")
         if event.code == 313:
-            print("auki")
             koura.on(5)
-            print("aukien")
-    
+
+    # Don't over do, so stop the engine on trigger release
     if event.type == 1 and event.value == 0:
         if event.code == 312:
-            print("kiinni")
             koura.stop()
-            print("kiinnien")
         if event.code == 313:
-            print("auki")
             koura.stop()
-            print("aukien")
