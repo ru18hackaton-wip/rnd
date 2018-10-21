@@ -3,7 +3,7 @@ __author__ = "bythew3i"
 
 import evdev
 
-from ev3dev2.motor import MoveJoystick, LargeMotor, OUTPUT_A, OUTPUT_B
+from ev3dev2.motor import MoveJoystick, LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D
 
 def find_controller():
     # ps4 controller set up
@@ -30,8 +30,11 @@ def scale_stick(value):
 
 x = 0
 y = 0
+print("onks padia")
 gamepad = find_controller()
 bot = create_steering_tank()
+koura = MediumMotor(OUTPUT_D)
+speed = 30
 
 for event in gamepad.read_loop():   #this loops infinitely
     if event.type == 3:             #Some stick is moved
@@ -40,18 +43,30 @@ for event in gamepad.read_loop():   #this loops infinitely
             wheel_speed = perkele
             y = perkele
         if event.code == 0:
-            # print(repr(event))
             perkele2 = scale_stick(event.value)/3.0
             steer_speed = perkele2
             x = perkele2
+        try:
+            bot.on(x, y, 100, 1)
+        except TypeError:
+            bot.off()
 
-    if event.type == 1 and event.code == 302 and event.value == 1:
-        print("X button is pressed. Stopping.")
-        running = False
-        break
+    if event.type == 1 and event.value == 1:
+        if event.code == 312:
+            print("kiinni")
+            koura.on(-5)
+            print("kiinnien")
+        if event.code == 313:
+            print("auki")
+            koura.on(5)
+            print("aukien")
     
-    # print(x, y)
-    try:
-        bot.on(x, y, 100, 1)
-    except TypeError:
-        bot.off()
+    if event.type == 1 and event.value == 0:
+        if event.code == 312:
+            print("kiinni")
+            koura.stop()
+            print("kiinnien")
+        if event.code == 313:
+            print("auki")
+            koura.stop()
+            print("aukien")
